@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style>
+        .kuang{text-align: center;margin-top:10px;}
+        .value{width: 200px;height:200px;border:1px solid;text-align: center;line-height: 200px;display: inline-block;}
+        #mess{
+          list-style: none;
+          background: hsl(210, 17%, 98%);
+          border: 2px solid #ccc;
+          height: 80vh;
+          overflow: auto;
+        }
+        li{
+          padding: 12px;
+        }
+        .li-head {
+          font-size: 12px;
+        }
+        .self{
+          text-align: right;
+        }
+        .self .li-text{
+          background: rgb(138, 218, 47);
+        }
+        .li-text{
+          padding: 12px;
+          display:inline-block;
+          border-radius: 5px;
+          background: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div id="tip">正在连接...</div>
+    <div class="kuang">
+      <input type="text" id='inputBox'>
+      <button id="btn">发送</button>
+    </div>
+    <ul id="mess"></ul>
+
+    <script>
+        var mess = document.getElementById("mess");
+        let name = '李狗蛋'
+        if(window.WebSocket){
+            var ws = new WebSocket('ws://localhost:8001');
+            ws.onopen = function(e){
+                console.log("连接服务器成功");
+                ws.send(JSON.stringify({
+                  name,
+                  time: new Date(),
+                  message: '加入成功'
+                }));
+                tip.innerHTML = '连接成功'
+            }
+            ws.onclose = function(e){
+                console.log("服务器关闭");
+            }
+            ws.onerror = function(){
+                console.log("连接出错");
+            }
+            let append = (data) => {
+              let li = document.createElement('li')
+                li.classList =  data.name == name ? ['self'] : []
+                li.innerHTML = `
+                  <div class="li-head"> 
+                    <strong>${data.name}</strong>
+                    <span>(${data.time})<span>
+                  </div>
+                  <div class="li-text">${data.message}</div>
+                `
+                mess.appendChild(li)
+            }
+            ws.onmessage = function(e){
+                if (!e.data) return
+                let data = JSON.parse(e.data)
+                append(data)
+            }
+            let sendText = () => {
+              var time = new Date();
+              ws.send(JSON.stringify({
+                name,
+                time,
+                message: inputBox.value
+              }))
+              inputBox.value = ''
+            }
+            btn.onclick = sendText
+            document.addEventListener('keydown', (e) => {
+              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                sendText()
+              }
+            })
+        }
+    </script>
+</body>
+</html>
